@@ -5,13 +5,18 @@ description: Search for news, facts, information. Find anything on the internet.
 
 # Web Search
 
-Search the internet for real-time information.
+Search the internet. ONE CALL ONLY. Get results, then answer the user.
 
 ## How to Use
 
-Send JSON:
+Send this JSON EXACTLY ONCE:
 ```json
 {"query": "Cambodia news today", "lang": "en"}
 ```
 
-Use keywords, not full sentences.
+## RULES
+
+1. **ONE CALL ONLY.** Send the JSON once. Wait for results. Then answer the user.
+2. **DO NOT retry.** If results come back, USE THEM. Do not call again.
+3. **Synthesize results.** Read what came back and tell the user in your own words.
+4. **Use keywords in query.** Not full sentences. "Cambodia news today" not "search for Cambodia news today".
