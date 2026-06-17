@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Weather</title></head><body><script>
+async function getWeather(city){
+  try{
+    const gRes=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=en&format=json');
+    const gData=await gRes.json();
+    if(!gData.results?.length) return null;
+    const {latitude,longitude,name,country}=gData.results[0];
+    const wRes=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,pressure_msl&timezone=auto');
+    const wData=await wRes.json();
+    const c=wData.current;
+    const codes={0:'Clear sky ☀️',1:'Mainly clear 🌤️',2:'Partly cloudy ⛅',3:'Overcast ☁️',45:'Fog 🌫️',48:'Rime fog 🌫️',51:'Light drizzle 🌦️',53:'Moderate drizzle 🌦️',55:'Dense drizzle 🌧️',61:'Slight rain 🌧️',63:'Moderate rain 🌧️',65:'Heavy rain 🌧️',71:'Slight snow 🌨️',73:'Moderate snow 🌨️',75:'Heavy snow ❄️',80:'Rain showers 🌦️',81:'Moderate rain showers 🌧️',82:'Violent rain showers 🌧️',85:'Snow showers 🌨️',86:'Heavy snow showers ❄️',95:'Thunderstorm ⛈️',96:'Thunderstorm with hail ⛈️',99:'Thunderstorm with heavy hail ⛈️'};
+    return {city:name+', '+country,condition:codes[c.weather_code]||'Unknown',temp:c.temperature_2m,feelsLike:c.apparent_temperature,humidity:c.relative_humidity_2m,windSpeed:c.wind_speed_10m,pressure:c.pressure_msl};
+  }catch(e){return null}
+}
+
+window['ai_edge_gallery_get_result']=async(data)=>{
+  try{
+    const {city}=JSON.parse(data);
+    if(!city) return JSON.stringify({error:'city required'});
+    const w=await getWeather(city);
+    if(w) return JSON.stringify({result:w.city+': '+w.condition+', '+w.temp+'°C (feels like '+w.feelsLike+'°C), Humidity: '+w.humidity+'%, Wind: '+w.windSpeed+' km/h, Pressure: '+w.pressure+' hPa'});
+    return JSON.stringify({error:'Weather not found for: '+city});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Translator</title></head><body><script>
+async function translate(text,from,to){
+  try{
+    const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+(from||'auto')+'&tl='+(to||'en')+'&dt=t&q='+encodeURIComponent(text);
+    const res=await fetch(url);
+    const data=await res.json();
+    if(data&&data[0]) return data[0].map(x=>x[0]).join('');
+    return null;
+  }catch(e){return null}
+}
+
+window['ai_edge_gallery_get_result']=async(data)=>{
+  try{
+    const {text,from='auto',to='en'}=JSON.parse(data);
+    if(!text) return JSON.stringify({error:'text required'});
+    const result=await translate(text,from,to);
+    if(result) return JSON.stringify({result,from:from==='auto'?'auto-detected':from,to});
+    return JSON.stringify({error:'Translation failed'});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>

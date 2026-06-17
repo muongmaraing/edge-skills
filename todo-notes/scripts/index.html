@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Todo & Notes</title></head><body><script>
+const TODO_KEY='hermes_todos',NOTE_KEY='hermes_notes';
+function getTodos(){try{return JSON.parse(localStorage.getItem(TODO_KEY)||'[]')}catch(e){return[]}}
+function saveTodos(t){localStorage.setItem(TODO_KEY,JSON.stringify(t))}
+function getNotes(){try{return JSON.parse(localStorage.getItem(NOTE_KEY)||'[]')}catch(e){return[]}}
+function saveNotes(n){localStorage.setItem(NOTE_KEY,JSON.stringify(n))}
+
+window['ai_edge_gallery_get_result']=(data)=>{
+  try{
+    const p=JSON.parse(data);
+    // === TODOS ===
+    if(p.type==='todo_add'){
+      const todos=getTodos();
+      const item={id:todos.length?Math.max(...todos.map(t=>t.id))+1:1,text:p.text,done:false,created:new Date().toISOString()};
+      todos.push(item);saveTodos(todos);
+      return JSON.stringify({result:'Added #'+item.id+': '+item.text,todo:item});
+    }
+    if(p.type==='todo_list'){
+      const todos=getTodos();
+      if(!todos.length) return JSON.stringify({result:'No todos yet.',todos:[],pending:0,done:0});
+      const active=todos.filter(t=>!t.done),done=todos.filter(t=>t.done);
+      return JSON.stringify({todos,active:active.length,done:done.length,list:todos.map(t=>(t.done?'[✓]':'[ ]')+' #'+t.id+': '+t.text).join('\n')});
+    }
+    if(p.type==='todo_done'){
+      const todos=getTodos(),t=todos.find(x=>x.id===p.id);
+      if(!t) return JSON.stringify({error:'Todo #'+p.id+' not found'});
+      t.done=true;t.completed=new Date().toISOString();saveTodos(todos);
+      return JSON.stringify({result:'Completed #'+p.id+': '+t.text});
+    }
+    if(p.type==='todo_delete'){
+      let todos=getTodos();const before=todos.length;
+      todos=todos.filter(t=>t.id!==p.id);saveTodos(todos);
+      return JSON.stringify({result:before>todos.length?'Deleted #'+p.id:'Todo #'+p.id+' not found'});
+    }
+    // === NOTES ===
+    if(p.type==='note_save'){
+      const notes=getNotes();
+      const item={id:notes.length?Math.max(...notes.map(n=>n.id))+1:1,title:p.title||'Untitled',content:p.content||'',created:new Date().toISOString()};
+      notes.push(item);saveNotes(notes);
+      return JSON.stringify({result:'Saved note #'+item.id+': '+item.title,note:item});
+    }
+    if(p.type==='note_list'){
+      const notes=getNotes();
+      if(!notes.length) return JSON.stringify({result:'No notes yet.',notes:[]});
+      return JSON.stringify({notes:notes.map(n=>({id:n.id,title:n.title,created:n.created,preview:(n.content||'').substring(0,100)})),count:notes.length});
+    }
+    if(p.type==='note_read'){
+      const notes=getNotes(),n=notes.find(x=>x.id===p.id);
+      if(!n) return JSON.stringify({error:'Note #'+p.id+' not found'});
+      return JSON.stringify({note:n});
+    }
+    if(p.type==='note_search'){
+      const notes=getNotes(),q=(p.query||'').toLowerCase();
+      const matches=notes.filter(n=>n.title.toLowerCase().includes(q)||(n.content||'').toLowerCase().includes(q));
+      if(!matches.length) return JSON.stringify({result:'No notes matching: '+p.query,matches:[]});
+      return JSON.stringify({result:'Found '+matches.length+' notes',matches:matches.map(n=>({id:n.id,title:n.title,preview:(n.content||'').substring(0,150),created:n.created}))});
+    }
+    if(p.type==='note_delete'){
+      let notes=getNotes();const before=notes.length;
+      notes=notes.filter(n=>n.id!==p.id);saveNotes(notes);
+      return JSON.stringify({result:before>notes.length?'Deleted note #'+p.id:'Note #'+p.id+' not found'});
+    }
+    return JSON.stringify({error:'Unknown type: '+p.type+'. Use: todo_add, todo_list, todo_done, todo_delete, note_save, note_list, note_read, note_search, note_delete'});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>

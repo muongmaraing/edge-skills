@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Web Scraper</title></head><body><script>
+async function fetchPage(url,maxChars=5000){
+  // Try CORS proxy first
+  try{
+    const proxy='https://api.allorigins.win/raw?url=';
+    const res=await fetch(proxy+encodeURIComponent(url));
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const html=await res.text();
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    doc.querySelectorAll('script,style,nav,header,footer,iframe,noscript').forEach(e=>e.remove());
+    const text=(doc.body?.innerText||doc.body?.textContent||'').replace(/\n{3,}/g,'\n\n').trim();
+    return text.substring(0,maxChars)||'[No readable text found]';
+  }catch(e){
+    // Direct fetch fallback
+    try{
+      const res=await fetch(url);
+      const html=await res.text();
+      const doc=new DOMParser().parseFromString(html,'text/html');
+      doc.querySelectorAll('script,style,nav,header,footer').forEach(e=>e.remove());
+      const text=(doc.body?.innerText||'').replace(/\n{3,}/g,'\n\n').trim();
+      return text.substring(0,maxChars)||'[No readable text]';
+    }catch(e2){return null}
+  }
+}
+
+window['ai_edge_gallery_get_result']=async(data)=>{
+  try{
+    const {url,max_chars=5000}=JSON.parse(data);
+    if(!url) return JSON.stringify({error:'url required'});
+    const text=await fetchPage(url,max_chars);
+    if(text) return JSON.stringify({result:text,url});
+    return JSON.stringify({error:'Failed to fetch: '+url});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>

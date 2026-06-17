@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Memory</title></head><body><script>
+window['ai_edge_gallery_get_result']=(data)=>{
+  try{
+    const {action,key,value,query}=JSON.parse(data);
+    const STORE='hermes_memory';
+    const getStore=()=>{try{return JSON.parse(localStorage.getItem(STORE)||'{}')}catch(e){return{}}};
+    const setStore=(s)=>{localStorage.setItem(STORE,JSON.stringify(s))};
+    if(action==='save'||action==='set'){
+      if(!key||value===undefined) return JSON.stringify({error:'key and value required'});
+      const s=getStore();s[key]={value,time:new Date().toISOString()};setStore(s);
+      return JSON.stringify({result:'Saved: '+key});
+    }
+    if(action==='recall'||action==='get'){
+      const s=getStore();
+      if(key) return JSON.stringify({result:s[key]?s[key].value:null,found:!!s[key]});
+      const keys=Object.keys(s);
+      if(!keys.length) return JSON.stringify({result:'No memories stored.',keys:[]});
+      return JSON.stringify({keys,count:keys.length,preview:keys.slice(0,10).map(k=>k+': '+(typeof s[k].value==='string'?s[k].value.substring(0,80):JSON.stringify(s[k].value))).join('\n')});
+    }
+    if(action==='recall_all'||action==='all'){
+      const s=getStore();
+      return JSON.stringify({memories:Object.entries(s).map(([k,v])=>({key:k,value:v.value,time:v.time})),count:Object.keys(s).length});
+    }
+    if(action==='delete'||action==='remove'){
+      if(!key) return JSON.stringify({error:'key required'});
+      const s=getStore();
+      if(s[key]){delete s[key];setStore(s);return JSON.stringify({result:'Deleted: '+key})}
+      return JSON.stringify({error:'Key not found: '+key});
+    }
+    if(action==='search'){
+      if(!query) return JSON.stringify({error:'query required'});
+      const s=getStore(),q=query.toLowerCase(),matches=Object.entries(s).filter(([k,v])=>k.toLowerCase().includes(q)||(typeof v.value==='string'&&v.value.toLowerCase().includes(q)));
+      if(!matches.length) return JSON.stringify({result:'No matches for: '+query,matches:[]});
+      return JSON.stringify({result:'Found '+matches.length+' matches',matches:matches.map(([k,v])=>({key:k,value:v.value,time:v.time}))});
+    }
+    if(action==='clear'){
+      const s=getStore();const n=Object.keys(s).length;localStorage.removeItem(STORE);
+      return JSON.stringify({result:'Cleared '+n+' memories'});
+    }
+    return JSON.stringify({error:'Unknown action: '+action+'. Use: save, recall, recall_all, delete, search, clear'});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>

@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>Calculator</title></head><body><script>
+const UNITS={length:{km:1000,m:1,cm:0.01,mm:0.001,miles:1609.344,feet:0.3048,inches:0.0254,yards:0.9144},mass:{kg:1,g:0.001,lb:0.453592,oz:0.0283495,ton:1000},area:{sqm:1,sqft:0.092903,acre:4046.86,hectare:10000},volume:{liter:1,gallon:3.78541,ml:0.001,cup:0.236588},speed:{kph:1,mph:1.60934,mps:3.6}};
+
+function convertUnit(v,f,t){
+  for(const cat of Object.values(UNITS)){
+    if(cat[f]!==undefined&&cat[t]!==undefined) return (v*cat[f])/cat[t];
+  }
+  // Temperature special case
+  if(f==='celsius'&&t==='fahrenheit') return v*9/5+32;
+  if(f==='fahrenheit'&&t==='celsius') return (v-32)*5/9;
+  if(f==='celsius'&&t==='kelvin') return v+273.15;
+  if(f==='kelvin'&&t==='celsius') return v-273.15;
+  if(f==='fahrenheit'&&t==='kelvin') return (v-32)*5/9+273.15;
+  if(f==='kelvin'&&t==='fahrenheit') return (v-273.15)*9/5+32;
+  return null;
+}
+
+async function currencyConvert(amt,f,t){
+  try{
+    const r=await fetch('https://api.frankfurter.app/latest?amount='+amt+'&from='+(f||'usd')+'&to='+(t||'khr'));
+    const d=await r.json();
+    if(d.rates&&d.rates[t.toUpperCase()]) return {result:d.rates[t.toUpperCase()],rate:d.rates[t.toUpperCase()]/amt,date:d.date};
+    return null;
+  }catch(e){return null}
+}
+
+window['ai_edge_gallery_get_result']=async(data)=>{
+  try{
+    const p=JSON.parse(data);
+    if(p.type==='math'||p.expression){
+      const expr=(p.expression||'').replace(/\^/g,'**').replace(/sqrt\(/g,'Math.sqrt(').replace(/abs\(/g,'Math.abs(').replace(/pi/gi,'Math.PI').replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(').replace(/tan\(/g,'Math.tan(').replace(/log\(/g,'Math.log10(').replace(/ln\(/g,'Math.log(');
+      const safe=expr.replace(/[^0-9+\-*/().%,\sMath.sqrtabincolgpe]/g,'');
+      if(!safe.trim()) return JSON.stringify({error:'Invalid expression'});
+      const result=Function('"use strict";return('+safe+')')();
+      return JSON.stringify({result:Number.isFinite(result)?parseFloat(result.toPrecision(12)):result,expression:p.expression});
+    }
+    if(p.type==='convert'){
+      if(!p.value||!p.from||!p.to) return JSON.stringify({error:'value, from, to required'});
+      const r=convertUnit(Number(p.value),p.from.toLowerCase(),p.to.toLowerCase());
+      return JSON.stringify(r!==null?{result:parseFloat(r.toPrecision(10)),from:p.value+' '+p.from,to:parseFloat(r.toPrecision(10))+' '+p.to}:{error:'Unsupported conversion: '+p.from+' to '+p.to});
+    }
+    if(p.type==='currency'){
+      const r=await currencyConvert(p.amount||1,p.from||'usd',p.to||'khr');
+      return JSON.stringify(r||{error:'Currency conversion failed'});
+    }
+    if(p.type==='percent'){
+      return JSON.stringify({result:(Number(p.value||0)/100)*Number(p.of||0),explanation:p.value+'% of '+p.of+' = '+((Number(p.value||0)/100)*Number(p.of||0))});
+    }
+    return JSON.stringify({error:'Unknown type: '+p.type+'. Use: math, convert, currency, percent'});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>
