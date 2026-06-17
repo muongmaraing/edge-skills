@@ -1,0 +1,17 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Web Search</title></head><body><script>
+function ddg(q){return new Promise(r=>{const c='s_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),s=document.createElement('script'),t=setTimeout(()=>{delete window[c];s.remove();r(null)},8000);window[c]=d=>{clearTimeout(t);delete window[c];s.remove();let o='';if(d.AbstractText)o+=d.AbstractText;if(d.Answer)o+=(o?'\n\n':'')+'Answer: '+d.Answer;if(d.RelatedTopics?.length){o+='\n\nRelated:\n'+d.RelatedTopics.filter(x=>x.Text).slice(0,5).map(x=>'• '+x.Text).join('\n')}if(d.Results?.length){o+='\n\nResults:\n'+d.Results.slice(0,3).map(x=>'• '+x.Text+' - '+x.FirstURL).join('\n')}r(o.trim()||null)};s.onerror=()=>{clearTimeout(t);delete window[c];s.remove();r(null)};s.src='https://api.duckduckgo.com/?'+new URLSearchParams({q,format:'json',no_html:'1',skip_disambig:'1',callback:c});document.head.appendChild(s)})}
+async function wiki(topic,lang){try{const b=`https://${lang||'en'}.wikipedia.org/w/api.php`,sr=await fetch(b+'?'+new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:topic,gsrlimit:'1',prop:'extracts',explaintext:'1',exintro:'1',origin:'*'}));const sd=await sr.json();if(!sd.query?.pages)return null;const pg=Object.values(sd.query.pages)[0];return'=== '+(pg.title||topic)+' ===\n\n'+(pg.extract||'').substring(0,3000)}catch(e){return null}}
+
+window['ai_edge_gallery_get_result']=async(data)=>{
+  try{
+    const {query,lang='en'}=JSON.parse(data);
+    if(!query)return JSON.stringify({error:'query required'});
+    const[ddgR,wikiR]=await Promise.all([ddg(query),wiki(query,lang)]);
+    let out='';
+    if(ddgR)out+=ddgR;
+    if(wikiR)out+=(out?'\n\n\n':'')+wikiR;
+    if(!out)return JSON.stringify({error:'No results for: '+query});
+    return JSON.stringify({result:out});
+  }catch(e){return JSON.stringify({error:e.message})}
+};
+</script></body></html>
