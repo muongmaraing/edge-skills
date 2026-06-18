@@ -1,39 +1,13 @@
 ---
 name: smart-calculator
-description: Advanced calculator supporting math expressions, unit conversions (length, mass, temperature, area, volume, speed), currency conversion (170+ currencies via frankfurter.app), and percentage calculations. No API key needed for math and units.
+description: Calculate math expressions, convert units length mass temperature area volume speed, convert currency USD KHR, calculate percentages.
 ---
 
-# Smart Calculator
+OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY ONE OF THESE FORMATS:
 
-Evaluate math expressions, convert units, and convert currencies.
+Math: {"type":"math","expression":"sqrt(144)+10"}
+Convert: {"type":"convert","value":5,"from":"km","to":"miles"}
+Currency: {"type":"currency","amount":100,"from":"usd","to":"khr"}
+Percent: {"type":"percent","value":15,"of":200}
 
-## How to Use
-
-**Math:**
-```json
-{"type": "math", "expression": "sqrt(144) + 5 * 3"}
-```
-
-**Unit Conversion:**
-```json
-{"type": "convert", "value": 100, "from": "km", "to": "miles"}
-```
-
-**Currency:**
-```json
-{"type": "currency", "amount": 100, "from": "usd", "to": "khr"}
-```
-
-**Percentage:**
-```json
-{"type": "percent", "value": 85, "of": 200}
-```
-
-## Supported Units
-- Length: km, m, cm, mm, miles, feet, inches, yards
-- Mass: kg, g, lb, oz, ton
-- Temperature: celsius, fahrenheit, kelvin
-- Area: sqm, sqft, acre, hectare
-- Volume: liter, gallon, ml, cup
-- Speed: kph, mph, mps
-- Currency: any ISO code (USD, KHR, EUR, JPY, etc.)
+STOP. JUST JSON.

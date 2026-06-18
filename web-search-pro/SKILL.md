@@ -1,30 +1,12 @@
 ---
 name: web-search-pro
-description: Enhanced web search using DuckDuckGo, Wikipedia, and Google News. Use for current events, factual research, definitions, and anything requiring live internet data. No API key needed.
+description: Enhanced web search DuckDuckGo Wikipedia Google News. Search for current events, facts, information, news. Find anything on the internet.
 ---
 
-# Web Search Pro
+OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY THIS FORMAT:
 
-Search the live web for any topic. Combines DuckDuckGo Instant Answers, Wikipedia articles, and news headlines in parallel.
+{"query":"YOUR SEARCH QUERY","lang":"en","news":true}
 
-## How to Use
+Use lang="km" for Khmer searches. Set news:true to include Google News headlines.
 
-Pass a JSON string:
-```json
-{
-  "query": "keyword search query",
-  "lang": "en"
-}
-```
-
-The skill returns:
-- DuckDuckGo Instant Answer + related topics + web results
-- Wikipedia article intro + infobox (if available)
-- News headlines from Google News RSS (if `news: true`)
-
-## Tips
-
-- Use keyword-style queries: "Cambodia economy 2025" not "what is the economy of Cambodia"
-- Specify language with `lang`: "en", "fr", "ja", "ko", "zh", "km" (Khmer via Wikipedia)
-- Set `news: true` to include current news headlines
-- After getting results, synthesize a clear answer with sources cited
+STOP. JUST JSON.

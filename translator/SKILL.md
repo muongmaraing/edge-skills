@@ -1,44 +1,12 @@
 ---
 name: universal-translator
-description: Translate text between 100+ languages using Google Translate API. Supports auto-detection of source language. No API key required.
+description: Translate text between 100+ languages Google Translate API. Auto-detect language. Translate Khmer English Chinese Thai French.
 ---
 
-# Universal Translator
+OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY THIS FORMAT:
 
-Translate text between any languages. Auto-detects source language if not specified.
+{"text":"Hello world","from":"en","to":"km"}
 
-## How to Use
+Use "auto" for auto-detect source language.
 
-```json
-{
-  "text": "Hello, how are you?",
-  "from": "auto",
-  "to": "km"
-}
-```
-
-Or specify source:
-```json
-{
-  "text": "សួស្តី តើអ្នកសុខសប្បាយទេ?",
-  "from": "km",
-  "to": "en"
-}
-```
-
-## Language Codes
-- English: en
-- Khmer: km
-- Thai: th
-- Chinese: zh-CN
-- Japanese: ja
-- Korean: ko
-- French: fr
-- Spanish: es
-- Vietnamese: vi
-- And 100+ more...
-
-## Tips
-- Use `from: "auto"` when unsure of source language
-- The skill preserves formatting and punctuation
-- For long texts, break into paragraphs for better results
+STOP. JUST JSON.

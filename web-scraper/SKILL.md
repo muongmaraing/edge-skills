@@ -1,35 +1,10 @@
 ---
 name: web-scraper
-description: Fetch and extract readable text from any web page. Use for reading articles, checking website content, extracting data, and accessing information behind URLs.
+description: Fetch read extract text from any web page URL. Read articles, check websites, get content from links.
 ---
 
-# Web Scraper
+OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY THIS FORMAT:
 
-Fetch any web page and extract its readable text content. Strips out navigation, ads, scripts, and formatting to give you clean text.
+{"url":"https://example.com/page","max_chars":3000}
 
-## How to Use
-
-```json
-{
-  "url": "https://example.com/article",
-  "max_chars": 5000
-}
-```
-
-## Features
-- Strips HTML, scripts, styles, navigation, headers, footers
-- Returns clean readable text
-- Falls back to direct fetch if CORS proxy unavailable
-- Configurable max character limit
-
-## Use Cases
-- Read news articles behind URLs
-- Extract data from web pages
-- Check website content
-- Fetch documentation or reference material
-- Get current information from any public webpage
-
-## Limitations
-- JavaScript-rendered pages may return empty content
-- Some sites block automated access
-- Maximum ~5000 characters returned to preserve context
+STOP. JUST JSON.
