@@ -3,8 +3,9 @@ name: todo-notes
 description: Manage todos tasks list create complete delete. Save notes read search delete. Personal task manager notebook.
 ---
 
-OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY ONE OF THESE:
+ONE TOOL CALL ONLY. After receiving the result, write your final answer. DO NOT call tool again or output JSON again.
 
+OUTPUT ONLY ONE JSON LINE:
 Add todo: {"type":"todo_add","text":"Buy groceries"}
 List todos: {"type":"todo_list"}
 Complete todo: {"type":"todo_done","id":1}
@@ -15,4 +16,4 @@ Read note: {"type":"note_read","id":1}
 Search notes: {"type":"note_search","query":"keyword"}
 Delete note: {"type":"note_delete","id":1}
 
-STOP. JUST JSON.
+NO <|tool_call|>. JUST JSON.

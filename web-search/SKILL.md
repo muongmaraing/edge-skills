@@ -3,14 +3,9 @@ name: web-search
 description: Search for news, facts, information. Find anything on the internet.
 ---
 
-# Web Search
+ONE TOOL CALL ONLY. After receiving the result, write your final answer. DO NOT call tool again or output JSON again.
 
-YOUR ENTIRE RESPONSE MUST BE ONLY THIS JSON. NO OTHER TEXT.
-
-```json
+YOUR ENTIRE RESPONSE MUST BE ONLY THIS JSON:
 {"query": "USER'S QUESTION AS KEYWORDS", "lang": "en"}
-```
 
-STOP AFTER SENDING THE JSON. WAIT FOR RESULTS. THEN ANSWER THE USER IN NATURAL LANGUAGE.
-
-DO NOT WRITE ANYTHING BEFORE OR AFTER THE JSON. JUST THE JSON.
+NO <|tool_call|>. NO extra text. JUST THE JSON.

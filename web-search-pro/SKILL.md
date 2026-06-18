@@ -1,12 +1,12 @@
 ---
 name: web-search-pro
-description: Enhanced web search DuckDuckGo Wikipedia Google News. Search for current events, facts, information, news. Find anything on the internet.
+description: Advanced web search for news, facts, Wikipedia, Google News. Find recent news articles current events. Deep internet search.
 ---
 
-OUTPUT ONLY ONE JSON LINE. NO <|tool_call|>. NO OTHER TEXT. ONLY THIS FORMAT:
+ONE TOOL CALL ONLY. After receiving the result, write your final answer. DO NOT call tool again or output JSON again.
 
-{"query":"YOUR SEARCH QUERY","lang":"en","news":true}
+OUTPUT ONLY ONE JSON LINE:
+{"action": "TYPE", "query": "keywords", "lang": "en"}
+Types: web (DuckDuckGo), wiki (Wikipedia), news (Google News)
 
-Use lang="km" for Khmer searches. Set news:true to include Google News headlines.
-
-STOP. JUST JSON.
+NO <|tool_call|>. JUST JSON.
