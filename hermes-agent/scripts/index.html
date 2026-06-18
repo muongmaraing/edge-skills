@@ -2,65 +2,57 @@
 <html lang="en">
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Hermes Agent</title></head>
 <body><script>
-// DuckDuckGo JSONP
-function ddgSearch(q){return new Promise(r=>{const c='d_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),s=document.createElement('script'),t=setTimeout(()=>{delete window[c];s.remove();r(null)},8000);window[c]=d=>{clearTimeout(t);delete window[c];s.remove();let o='';if(d.AbstractText)o+=d.AbstractText;if(d.Answer)o+=(o?'\n\n':'')+'Answer: '+d.Answer;if(d.Definition)o+=(o?'\n\n':'')+'Definition: '+d.Definition;if(d.RelatedTopics?.length){o+='\n\nRelated:\n'+d.RelatedTopics.filter(x=>x.Text).slice(0,5).map(x=>'• '+x.Text).join('\n')}if(d.Results?.length){o+='\n\nResults:\n'+d.Results.slice(0,3).map(x=>'• '+x.Text+' - '+x.FirstURL).join('\n')}r(o.trim()||null)};s.onerror=()=>{clearTimeout(t);delete window[c];s.remove();r(null)};s.src='https://api.duckduckgo.com/?'+new URLSearchParams({q,format:'json',no_html:'1',skip_disambig:'1',callback:c});document.head.appendChild(s)})}
-// Wikipedia
-async function wikiSearch(topic,lang){try{const b=`https://${lang||'en'}.wikipedia.org/w/api.php`,sr=await fetch(b+'?'+new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:topic,gsrlimit:'1',prop:'extracts',explaintext:'1',exintro:'1',origin:'*'}));const sd=await sr.json();if(!sd.query?.pages)return null;const pg=Object.values(sd.query.pages)[0];return'=== '+(pg.title||topic)+' ===\n\n'+(pg.extract||'').substring(0,3000)}catch(e){return null}}
-// Google News RSS
-async function newsSearch(q){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://news.google.com/rss/search?q='+encodeURIComponent(q)+'&hl=en-US&gl=US&ceid=US:en'));const d=await r.json();if(d.items?.length)return'=== NEWS ===\n'+d.items.slice(0,5).map((x,i)=>(i+1)+'. '+x.title+'\n   '+new Date(x.pubDate).toLocaleDateString()+' - '+x.link).join('\n\n');return null}catch(e){return null}}
-// Web Fetch
-async function webFetch(url){try{const proxy='https://api.allorigins.win/raw?url=',res=await fetch(proxy+encodeURIComponent(url));if(!res.ok)throw new Error('HTTP '+res.status);const html=await res.text(),doc=new DOMParser().parseFromString(html,'text/html');doc.querySelectorAll('script,style,nav,header,footer,iframe,noscript').forEach(e=>e.remove());return(doc.body?.innerText||doc.body?.textContent||'').replace(/\n{3,}/g,'\n\n').trim().substring(0,5000)||'[No readable text]'}catch(e){return null}}
-// Memory
-function memSave(key,value){try{const s=JSON.parse(localStorage.getItem('hm')||'{}');s[key]={value,time:new Date().toISOString()};localStorage.setItem('hm',JSON.stringify(s));return'Saved: '+key}catch(e){return'Error: '+e.message}}
-function memRecall(key){try{const s=JSON.parse(localStorage.getItem('hm')||'{}');if(key)return s[key]?JSON.stringify(s[key]):null;const ks=Object.keys(s);return ks.length?ks.map(k=>k+': '+s[k].value.substring(0,100)).join('\n'):'No memories.'}catch(e){return null}}
-function memDelete(key){try{const s=JSON.parse(localStorage.getItem('hm')||'{}');if(s[key]){delete s[key];localStorage.setItem('hm',JSON.stringify(s));return'Deleted: '+key}return'Not found: '+key}catch(e){return'Error: '+e.message}}
-// Calculator
-function calc(expr){try{const safe=expr.replace(/\^/g,'**').replace(/sqrt\(/g,'Math.sqrt(').replace(/abs\(/g,'Math.abs(').replace(/pi/gi,'Math.PI').replace(/sin\(/g,'Math.sin(').replace(/cos\(/g,'Math.cos(');const result=Function('\"use strict\";return('+safe+')')();if(typeof result==='number'&&isFinite(result))return Number.isInteger(result)?result.toString():parseFloat(result.toPrecision(12)).toString();return null}catch(e){return null}}
-// Translate
+function ddgSearch(q){return new Promise(r=>{const c='d_'+Date.now(),s=document.createElement('script'),t=setTimeout(()=>{delete window[c];s.remove();r(null)},8000);window[c]=d=>{clearTimeout(t);delete window[c];s.remove();let o='';if(d.AbstractText)o+=d.AbstractText;if(d.Answer)o+=(o?'\n\n':'')+d.Answer;if(d.RelatedTopics?.length)o+='\n\n'+d.RelatedTopics.filter(x=>x.Text).slice(0,4).map(x=>'• '+x.Text).join('\n');r(o.trim()||null)};s.onerror=()=>{clearTimeout(t);delete window[c];s.remove();r(null)};s.src='https://api.duckduckgo.com/?'+new URLSearchParams({q,format:'json',no_html:'1',skip_disambig:'1',callback:c});document.head.appendChild(s)})}
+async function wikiSearch(topic,lang){try{const b='https://'+(lang||'en')+'.wikipedia.org/w/api.php',sr=await fetch(b+'?'+new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:topic,gsrlimit:'1',prop:'extracts',explaintext:'1',exintro:'1',origin:'*'}));const sd=await sr.json();if(!sd.query?.pages)return null;const pg=Object.values(sd.query.pages)[0];return(pg.extract||'').substring(0,2000)}catch(e){return null}}
+async function getWeather(city){try{const g=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&format=json');const gd=await g.json();if(!gd.results?.length)return null;const{latitude,longitude,name,country}=gd.results[0];const w=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto');const wd=await w.json();const c=wd.current;const codes={0:'Clear',1:'Clear',2:'Partly cloudy',3:'Overcast',45:'Fog',51:'Drizzle',61:'Rain',80:'Showers',95:'Thunderstorm'};return name+', '+country+': '+(codes[c.weather_code]||'Unknown')+', '+c.temperature_2m+'C (feels '+c.apparent_temperature+'C), Humidity '+c.relative_humidity_2m+'%, Wind '+c.wind_speed_10m+' km/h'}catch(e){return null}}
+function calc(expr){try{const s=expr.replace(/\^/g,'**').replace(/sqrt\(/g,'Math.sqrt(');const r=Function('"use strict";return('+s+')')();if(typeof r==='number'&&isFinite(r))return expr+' = '+r;return null}catch(e){return null}}
 async function translateText(text,from,to){try{const r=await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+(from||'auto')+'&tl='+(to||'en')+'&dt=t&q='+encodeURIComponent(text));const d=await r.json();return d&&d[0]?d[0].map(x=>x[0]).join(''):null}catch(e){return null}}
-// Weather
-async function getWeather(city){try{const g=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=en&format=json');const gd=await g.json();if(!gd.results?.length)return null;const{latitude,longitude,name,country}=gd.results[0];const w=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+latitude+'&longitude='+longitude+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&timezone=auto');const wd=await w.json();const c=wd.current;const codes={0:'Clear ☀️',1:'Mainly clear 🌤️',2:'Partly cloudy ⛅',3:'Overcast ☁️',45:'Fog 🌫️',51:'Drizzle 🌦️',61:'Rain 🌧️',63:'Moderate rain 🌧️',65:'Heavy rain 🌧️',80:'Showers 🌦️',95:'Thunderstorm ⛈️'};return name+', '+country+': '+(codes[c.weather_code]||'Unknown')+', '+c.temperature_2m+'°C (feels '+c.apparent_temperature+'°C), Humidity: '+c.relative_humidity_2m+'%, Wind: '+c.wind_speed_10m+' km/h'}catch(e){return null}}
-// Currency
-async function currencyConvert(amount,from,to){try{const r=await fetch('https://api.frankfurter.app/latest?amount='+amount+'&from='+(from||'usd')+'&to='+(to||'khr'));const d=await r.json();if(d.rates&&d.rates[to.toUpperCase()])return amount+' '+from.toUpperCase()+' = '+d.rates[to.toUpperCase()]+' '+to.toUpperCase();return null}catch(e){return null}}
+async function currencyConvert(amount,from,to){try{const r=await fetch('https://api.frankfurter.app/latest?amount='+amount+'&from='+(from||'usd')+'&to='+(to||'khr'));const d=await r.json();if(d.rates)return amount+' '+from.toUpperCase()+' = '+d.rates[to.toUpperCase()]+' '+to.toUpperCase();return null}catch(e){return null}}
 
-// MAIN
 window['ai_edge_gallery_get_result']=async(data)=>{
   try{
-    const input=JSON.parse(data);
-    const tools=input.tools||[input];
-    let results=[];
-    for(const t of tools){
-      const tool=t.tool;
-      try{
-        if(tool==='web_search'||tool==='search'){
-          const q=t.query||t.topic||'',lang=t.lang||'en';
-          const[ddg,wiki,news]=await Promise.all([ddgSearch(q),wikiSearch(q,lang),newsSearch(q)]);
-          let r='';
-          if(news)r+='=== NEWS ===\n'+news;
-          if(ddg)r+=(r?'\n\n':'')+'=== DuckDuckGo ===\n'+ddg;
-          if(wiki)r+=(r?'\n\n':'')+'=== Wikipedia ===\n'+wiki;
-          results.push(r||'Search complete. No results for: '+q+'. Try different keywords.');
-        }else if(tool==='web_fetch'||tool==='fetch'){
-          results.push(t.url?await webFetch(t.url)||'Failed to fetch: '+t.url:'Error: url required');
-        }else if(tool==='memory_save'||tool==='save'){
-          results.push(memSave(t.key,t.value));
-        }else if(tool==='memory_recall'||tool==='recall'){
-          results.push(memRecall(t.key||null)||'No memories.');
-        }else if(tool==='memory_delete'||tool==='delete'){
-          results.push(memDelete(t.key));
-        }else if(tool==='calculate'||tool==='calc'||tool==='math'){
-          const r=calc(t.expression);
-          results.push(r!==null?t.expression+' = '+r:'Cannot calculate: '+t.expression);
-        }else if(tool==='translate'){
-          results.push(await translateText(t.text,t.from||'auto',t.to||'en')||'Translation failed');
-        }else if(tool==='weather'){
-          results.push(await getWeather(t.city)||'Weather not found for: '+t.city);
-        }else if(tool==='currency'){
-          results.push(await currencyConvert(t.amount||1,t.from||'usd',t.to||'khr')||'Currency conversion failed');
-        }else{results.push('Unknown tool: '+tool);}
-      }catch(err){results.push('Error: '+err.message);}
+    const p=JSON.parse(data);
+    const tool=p.tool||'web_search';
+    // Return PLAIN TEXT for all tools — model treats it as final answer
+    if(tool==='web_search'){
+      const q=p.query||'',l=p.lang||'en';
+      const[ddg,wiki]=await Promise.all([ddgSearch(q),wikiSearch(q,l)]);
+      let a='';if(ddg)a+=ddg;if(wiki)a+=(a?'\n\n':'')+wiki;
+      return a||'No results found for "'+q+'".';
     }
-    return JSON.stringify({results});
-  }catch(e){return JSON.stringify({error:e.message})}
+    if(tool==='weather'){
+      return await getWeather(p.city||'Phnom Penh')||'Weather not found.';
+    }
+    if(tool==='calculate'){
+      const r=calc(p.expression);
+      return r||'Cannot calculate: '+p.expression;
+    }
+    if(tool==='translate'){
+      return await translateText(p.text,p.from||'auto',p.to||'en')||'Translation failed.';
+    }
+    if(tool==='currency'){
+      return await currencyConvert(p.amount||1,p.from||'usd',p.to||'khr')||'Conversion failed.';
+    }
+    if(tool==='memory_save'){
+      const s=JSON.parse(localStorage.getItem('hm')||'{}');
+      s[p.key]={value:p.value,time:new Date().toISOString()};
+      localStorage.setItem('hm',JSON.stringify(s));
+      return 'Saved: '+p.key;
+    }
+    if(tool==='memory_recall'){
+      const s=JSON.parse(localStorage.getItem('hm')||'{}');
+      const ks=Object.keys(s);
+      return ks.length?ks.map(k=>k+': '+s[k].value.substring(0,100)).join('\n'):'No memories.';
+    }
+    if(tool==='web_fetch'){
+      try{const proxy='https://api.allorigins.win/raw?url=',res=await fetch(proxy+encodeURIComponent(p.url||''));
+      if(!res.ok)return 'Failed to fetch: '+p.url;
+      const html=await res.text(),doc=new DOMParser().parseFromString(html,'text/html');
+      doc.querySelectorAll('script,style,nav,header,footer').forEach(e=>e.remove());
+      return(doc.body?.innerText||'').replace(/\n{3,}/g,'\n\n').trim().substring(0,3000)||'[No text]';}
+      catch(e){return 'Fetch error: '+e.message;}
+    }
+    return 'Unknown tool: '+tool+'. Use: web_search, weather, calculate, translate, currency.';
+  }catch(e){return 'Error: '+e.message+'. Try again with valid JSON.'}
 };
 </script></body></html>

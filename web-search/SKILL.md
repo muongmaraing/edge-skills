@@ -3,11 +3,7 @@ name: web-search
 description: Search for news, facts, information. Find anything on the internet.
 ---
 
-DO NOT REPEAT. SEND ONE JSON THEN STOP. NEVER SEND A SECOND JSON.
+SEND ONLY THIS JSON:
+{"query":"YOUR QUESTION AS KEYWORDS","lang":"en"}
 
-FORMAT:
-{"query": "YOUR QUESTION AS KEYWORDS", "lang": "en"}
-
-Use "km" for Khmer topics, "en" for English.
-
-STOP. NO <|tool_call|>. ONE JSON ONLY. AFTER JSON, WRITE ANSWER. NEVER JSON AGAIN.
+The tool will return a complete answer. Just repeat it to the user. You are done.

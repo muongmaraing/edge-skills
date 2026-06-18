@@ -1,10 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Web Search Pro</title></head><body><script>
-// DuckDuckGo JSONP search
-function ddgSearch(q){return new Promise(r=>{const c='d_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),s=document.createElement('script'),t=setTimeout(()=>{delete window[c];s.remove();r(null)},8000);window[c]=d=>{clearTimeout(t);delete window[c];s.remove();let o='';if(d.AbstractText)o+=d.AbstractText;if(d.Answer)o+=(o?'\n\n':'')+'Answer: '+d.Answer;if(d.Definition)o+=(o?'\n\n':'')+'Definition: '+d.Definition;if(d.RelatedTopics?.length){const tp=d.RelatedTopics.filter(x=>x.Text).slice(0,5).map(x=>'• '+x.Text).join('\n');if(tp)o+='\n\nRelated Topics:\n'+tp}if(d.Results?.length){const rs=d.Results.slice(0,3).map(x=>'• '+x.Text+' — '+x.FirstURL).join('\n');if(rs)o+='\n\nWeb Results:\n'+rs}r(o.trim()||null)};s.onerror=()=>{clearTimeout(t);delete window[c];s.remove();r(null)};s.src='https://api.duckduckgo.com/?'+new URLSearchParams({q,format:'json',no_html:'1',skip_disambig:'1',callback:c});document.head.appendChild(s)})}
-// Wikipedia search
-async function wikiSearch(topic,lang){const b='https://'+(lang||'en')+'.wikipedia.org/w/api.php';try{const sr=await fetch(b+'?'+new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:topic,gsrlimit:'1',prop:'extracts',explaintext:'1',exintro:'1',origin:'*'}));const sd=await sr.json();if(!sd.query?.pages)return null;const pg=Object.values(sd.query.pages)[0];let o='=== '+ (pg.title||topic)+' ===\n\n'+(pg.extract||'');try{const pr=await fetch(b+'?'+new URLSearchParams({action:'parse',page:pg.title,section:'0',prop:'text',format:'json',origin:'*'}));const pd=await pr.json();const html=pd?.parse?.text?.['*'];if(html){const doc=new DOMParser().parseFromString(html,'text/html');const ib=doc.querySelector('table.infobox');if(ib){let x='';ib.querySelectorAll('tr').forEach(rw=>{const th=rw.querySelector('th'),td=rw.querySelector('td');if(th&&td)x+=th.textContent.replace(/\[\d+\]/g,'').trim()+': '+td.textContent.replace(/\[\d+\]/g,'').trim().replace(/\n+/g,' | ')+'\n'});if(x)o='=== INFOBOX ===\n'+x+'\n'+o}}}catch(e){}return o.substring(0,4000)}catch(e){return null}}
-// News via RSS2JSON
-async function getNews(topic){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://news.google.com/rss/search?q='+encodeURIComponent(topic)+'&hl=en-US&gl=US&ceid=US:en'));const d=await r.json();if(d.items?.length)return d.items.slice(0,5).map((x,i)=>`${i+1}. ${x.title}\n   ${x.pubDate}\n   ${x.link}`).join('\n\n');return null}catch(e){return null}}
+function ddgSearch(q){return new Promise(r=>{const c='d_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),s=document.createElement('script'),t=setTimeout(()=>{delete window[c];s.remove();r(null)},8000);window[c]=d=>{clearTimeout(t);delete window[c];s.remove();let o='';if(d.AbstractText)o+=d.AbstractText;if(d.Answer)o+=(o?'\n\n':'')+d.Answer;if(d.Definition)o+=(o?'\n\n':'')+d.Definition;if(d.RelatedTopics?.length){const tp=d.RelatedTopics.filter(x=>x.Text).slice(0,4).map(x=>'• '+x.Text).join('\n');if(tp)o+='\n\n'+tp}r(o.trim()||null)};s.onerror=()=>{clearTimeout(t);delete window[c];s.remove();r(null)};s.src='https://api.duckduckgo.com/?'+new URLSearchParams({q,format:'json',no_html:'1',skip_disambig:'1',callback:c});document.head.appendChild(s)})}
+async function wikiSearch(topic,lang){const b='https://'+(lang||'en')+'.wikipedia.org/w/api.php';try{const sr=await fetch(b+'?'+new URLSearchParams({action:'query',format:'json',generator:'search',gsrsearch:topic,gsrlimit:'1',prop:'extracts',explaintext:'1',exintro:'1',origin:'*'}));const sd=await sr.json();if(!sd.query?.pages)return null;const pg=Object.values(sd.query.pages)[0];let o=(pg.extract||'');return o.substring(0,2000)}catch(e){return null}}
+async function getNews(topic){try{const r=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://news.google.com/rss/search?q='+encodeURIComponent(topic)+'&hl=en-US&gl=US&ceid=US:en'));const d=await r.json();if(d.items?.length)return d.items.slice(0,5).map((x,i)=>(i+1)+'. '+x.title+'\n   '+x.pubDate).join('\n\n');return null}catch(e){return null}}
 
 window['ai_edge_gallery_get_result']=async(data)=>{
   try{
@@ -12,24 +9,24 @@ window['ai_edge_gallery_get_result']=async(data)=>{
     const query=p.query||'';
     const lang=p.lang||'en';
     const action=p.action||'web';
-    if(!query) return JSON.stringify({result:'Error: query required. Send: {"query":"your question"}'});
+    if(!query) return 'Please provide a search query.';
 
-    // Dispatch based on action
     if(action==='wiki'){
       const r=await wikiSearch(query,lang);
-      return JSON.stringify({result:r||'No Wikipedia article found for: '+query});
+      return r||'No Wikipedia article found for "'+query+'".';
     }
     if(action==='news'){
       const r=await getNews(query);
-      return JSON.stringify({result:r||'No news found for: '+query});
+      return r||'No recent news found for "'+query+'".';
     }
-    // Default: web (DuckDuckGo + Wikipedia)
+
+    // Default: web search
     const [ddg,wiki]=await Promise.all([ddgSearch(query),wikiSearch(query,lang)]);
-    let out='';
-    if(ddg) out+='=== DuckDuckGo ===\n'+ddg;
-    if(wiki) out+=(out?'\n\n\n':'')+wiki;
-    if(!out) return JSON.stringify({result:'No results found for: '+query+'. Answer from your own knowledge.'});
-    return JSON.stringify({result:out});
-  }catch(e){return JSON.stringify({result:'Tool error: '+e.message+'. Answer from your own knowledge.'})}
+    let answer='Here is what I found about "'+query+'":\n\n';
+    if(ddg) answer+=ddg;
+    if(wiki) answer+=(ddg?'\n\n':'')+wiki;
+    if(!ddg&&!wiki) answer='I searched for "'+query+'" but found no results.';
+    return answer;
+  }catch(e){return 'Search failed: '+e.message+'. Try different keywords.'}
 };
 </script></body></html>
