@@ -3,15 +3,16 @@ name: web-search-pro
 description: Advanced web search for news, facts, Wikipedia, Google News. Find recent news articles current events. Deep internet search.
 ---
 
-ONE TOOL CALL ONLY. After receiving the result, write your final answer. DO NOT call tool again or output JSON again.
+DO NOT REPEAT. SEND ONE JSON THEN STOP. NEVER SEND A SECOND JSON.
 
-PICK THE RIGHT TYPE:
-- web: facts, knowledge, history, definitions, how-to, explanations (DuckDuckGo — most common)
-- wiki: ONLY for famous people, places, companies, historical events (Wikipedia)
-- news: ONLY for recent events, latest news, what happened today/this week (Google News)
+PICK ONE ACTION:
+- web: facts, knowledge, history, definitions, how-to (most common - ALWAYS use this unless user asks for news or wiki)
+- wiki: ONLY when user says "wikipedia" or "who is" a famous person/place
+- news: ONLY when user asks "latest news", "today", "recent", "current events"
 
-OUTPUT ONLY ONE JSON LINE:
-{"action":"TYPE","query":"keywords","lang":"en"}
+FORMAT (pick one):
+{"action":"web","query":"your keywords","lang":"en"}
+{"action":"wiki","query":"topic","lang":"en"}
+{"action":"news","query":"topic"}
 
-NO <|tool_call|>. JUST JSON.
-If result empty, answer from your knowledge. NEVER call tool twice.
+STOP. NO <|tool_call|>. ONE JSON ONLY. AFTER JSON, WRITE ANSWER. NEVER JSON AGAIN.
